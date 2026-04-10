@@ -1,0 +1,34 @@
+name: Daily Stock Data Update
+
+on:
+  schedule:
+    # 台灣時間 05:55 更新 (UTC 是 21:55)
+    - cron: '55 21 * * *'
+  workflow_dispatch: # 允許手動執行測試
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install yfinance pytz
+
+      - name: Run Scraper
+        run: python data_updater.py
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "Auto Bot"
+          git config --global user.email "bot@github.com"
+          git add data.json
+          git commit -m "Automated update: $(date)" || echo "No changes to commit"
+          git push
