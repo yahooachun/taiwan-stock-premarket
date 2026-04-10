@@ -16,6 +16,13 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .live-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -36,8 +43,9 @@
 
         const App = () => {
             const [loading, setLoading] = useState(true);
+            const [isLive, setIsLive] = useState(false);
             const [data, setData] = useState({
-                lastUpdate: "2026/04/10 06:00:00 (預覽模式)",
+                lastUpdate: "2026/04/10 06:00:00",
                 usMarket: { 
                     tsmcAdr: 1.92, 
                     sox: 2.15, 
@@ -50,24 +58,30 @@
                     prev1600: 31.972, 
                     change: -0.183 
                 },
-                marketNews: "美股電子盤強勁，中東局勢趨緩，亞太晶片股預計集體噴發。",
+                marketNews: "預覽模式：美股電子盤強勁，外資匯入跡象明顯，權值股具備支撐。",
                 tradingPlan: { 
-                    openHigh: "預計開高 300 點。9:15 前若不破 09:05 低點可續抱，外資今日必大買。", 
-                    openLow: "除非匯率反轉貶值，否則回檔皆為外資佈局買點。", 
-                    stopLoss: "以昨日收盤價（或昨日低點 -2%）為嚴格防線。" 
+                    openHigh: "預計開高。觀察 9:15 支撐，若站穩開盤價則偏多操作。", 
+                    openLow: "觀察匯率守備位置，若台幣轉貶則持股需保守。", 
+                    stopLoss: "嚴守昨日低點防線。" 
                 }
             });
 
+            // 即時數據讀取邏輯
             useEffect(() => {
                 const fetchData = async () => {
                     try {
-                        const response = await fetch('./data.json');
+                        // 嘗試讀取由 GitHub Actions 自動生成的數據檔
+                        const response = await fetch('./data.json?t=' + new Date().getTime());
                         if (response.ok) {
                             const json = await response.json();
                             setData(json);
+                            setIsLive(true); // 成功讀取即時檔案，標記為即時模式
+                        } else {
+                            throw new Error('未偵測到即時數據檔');
                         }
                     } catch (err) {
-                        console.warn("目前使用內置數據運行。");
+                        console.warn("系統說明：目前無法讀取 data.json。請確認 GitHub Actions 是否已執行或檔案是否已部署。目前切換至預設模擬數據。");
+                        setIsLive(false);
                     } finally {
                         setTimeout(() => setLoading(false), 800);
                     }
@@ -87,135 +101,187 @@
                 return (
                     <div className="flex flex-col h-screen items-center justify-center bg-slate-50">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-                        <div className="text-slate-500 font-medium animate-pulse">正在掃描 06:00 全球戰鬥數據...</div>
+                        <div className="text-slate-500 font-medium animate-pulse text-sm">正在同步全球戰鬥數據...</div>
                     </div>
                 );
             }
 
             return (
                 <div className="min-h-screen p-4 md:p-8">
+                    {/* 頂部標題區 */}
                     <div className="max-w-6xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                             <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
                                 <Icon name="zap" className="text-yellow-500 fill-yellow-500" /> 台股盤前戰鬥看板
                             </h1>
-                            <p className="text-slate-500 mt-1">
-                                <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold mr-2">AUTO</span>
-                                數據驅動交易劇本 • 高手開盤五步驟整合
+                            <p className="text-slate-500 mt-1 flex items-center gap-2">
+                                <span className={`px-2 py-0.5 rounded text-xs font-bold ${isLive ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                    {isLive ? '● 即時連線中' : '● 預覽模式'}
+                                </span>
+                                <span className="text-xs">數據驅動交易劇本 • 高手 SOP 整合</span>
                             </p>
                         </div>
                         <div className="flex flex-col items-end">
                             <div className="px-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm text-sm font-mono flex items-center gap-2">
-                                <Icon name="activity" className="text-indigo-500" /> 更新時間：{data.lastUpdate}
+                                <Icon name="clock" className={`${isLive ? 'text-emerald-500' : 'text-slate-400'}`} /> 
+                                {isLive ? '即時更新：' : '最後數據：'}{data.lastUpdate}
                             </div>
+                            {!isLive && <span className="text-[10px] text-amber-500 mt-1 font-bold">請確認 data.json 是否已產出</span>}
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-2 space-y-6">
+                            {/* 第一層：國際數據 */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+                                    {isLive && <div className="absolute top-0 right-0 w-1 h-full bg-emerald-500"></div>}
                                     <div className="flex justify-between items-center mb-4">
-                                        <h3 className="font-bold flex items-center gap-2"><Icon name="globe" className="text-indigo-500" /> 美股昨日表現</h3>
-                                        <span className="px-2 py-1 rounded text-xs font-bold bg-red-100 text-red-700">強勢噴發</span>
+                                        <h3 className="font-bold flex items-center gap-2"><Icon name="globe" className="text-indigo-500" /> 美股與 ADR</h3>
+                                        <span className={`px-2 py-1 rounded text-[10px] font-bold ${data.usMarket.tsmcAdr > 1 ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700'}`}>
+                                            {data.usMarket.tsmcAdr > 1 ? '強勢情緒' : '普通情緒'}
+                                        </span>
                                     </div>
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-slate-500">台積電 ADR</span>
-                                            <span className="font-mono font-bold text-lg text-red-500">+{data.usMarket.tsmcAdr}%</span>
+                                            <span className="text-slate-500 text-sm">台積電 ADR</span>
+                                            <span className={`font-mono font-bold text-lg ${data.usMarket.tsmcAdr >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                                {data.usMarket.tsmcAdr > 0 ? '+' : ''}{data.usMarket.tsmcAdr}%
+                                            </span>
                                         </div>
-                                        <div className="flex justify-between items-center">
+                                        <div className="flex justify-between items-center text-sm">
                                             <span className="text-slate-500">費城半導體 (SOX)</span>
-                                            <span className="font-mono text-red-500">+{data.usMarket.sox}%</span>
+                                            <span className={`font-mono font-bold ${data.usMarket.sox >= 0 ? 'text-red-500' : 'text-green-500'}`}>{data.usMarket.sox}%</span>
                                         </div>
-                                        <div className="flex justify-between items-center">
+                                        <div className="flex justify-between items-center text-sm">
                                             <span className="text-slate-500">NVIDIA (NVDA)</span>
-                                            <span className="font-mono text-red-500">+{data.usMarket.nvda}%</span>
+                                            <span className="font-mono font-bold text-red-500">+{data.usMarket.nvda}%</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                                    <h3 className="font-bold flex items-center gap-2 mb-4"><Icon name="dollar-sign" className="text-emerald-500" /> 匯率腳印</h3>
+                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+                                    <h3 className="font-bold flex items-center gap-2 mb-4"><Icon name="dollar-sign" className="text-emerald-500" /> 匯率腳印 (08:45)</h3>
                                     <div className="text-center py-2 bg-slate-50 rounded-xl mb-4 border border-slate-100">
                                         <div className={`text-xl font-bold flex items-center justify-center gap-2 ${currencyAnalysis.color}`}>
-                                            <Icon name={currencyAnalysis.icon} /> {currencyAnalysis.status}
+                                            <Icon name={currencyAnalysis.icon} className={isLive ? "live-pulse" : ""} /> {currencyAnalysis.status}
                                         </div>
                                     </div>
                                     <div className="text-sm space-y-2">
                                         <div className="flex justify-between items-center border-b border-dashed pb-1">
-                                            <span className="text-slate-500">目前匯率</span>
+                                            <span className="text-slate-500">即時匯率</span>
                                             <span className="font-mono font-bold">{data.currency.current}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-slate-400">
-                                            <span>昨收匯率</span>
+                                            <span>昨日 16:00 基準</span>
                                             <span className="font-mono">{data.currency.prev1600}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
+                            {/* 第二層：交易計畫 */}
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                                <h3 className="font-bold mb-4 flex items-center gap-2 text-indigo-600 border-b pb-2"><Icon name="shield-alert" /> 今日戰鬥劇本</h3>
+                                <h3 className="font-bold mb-4 flex items-center gap-2 text-indigo-600 border-b pb-2">
+                                    <Icon name="shield-alert" /> {isLive ? '今日戰鬥劇本 (已生成)' : '劇本演練 (預覽模式)'}
+                                </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                                     <div className="p-4 bg-red-50/50 rounded-xl border border-red-100">
-                                        <div className="font-bold text-red-600 mb-2">劇本 A：開高</div>
-                                        <p className="text-slate-700">{data.tradingPlan.openHigh}</p>
+                                        <div className="font-bold text-red-600 mb-2 flex items-center gap-1"><Icon name="trending-up" size={14}/> 劇本 A：開高</div>
+                                        <p className="text-slate-700 leading-relaxed text-xs">{data.tradingPlan.openHigh}</p>
                                     </div>
                                     <div className="p-4 bg-green-50/50 rounded-xl border border-green-100">
-                                        <div className="font-bold text-green-600 mb-2">劇本 B：開低</div>
-                                        <p className="text-slate-700">{data.tradingPlan.openLow}</p>
+                                        <div className="font-bold text-green-600 mb-2 flex items-center gap-1"><Icon name="trending-down" size={14}/> 劇本 B：開低</div>
+                                        <p className="text-slate-700 leading-relaxed text-xs">{data.tradingPlan.openLow}</p>
                                     </div>
                                     <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
-                                        <div className="font-bold text-blue-600 mb-2">戰鬥防線</div>
-                                        <p className="text-slate-700 font-bold">{data.tradingPlan.stopLoss}</p>
+                                        <div className="font-bold text-blue-600 mb-2 flex items-center gap-1"><Icon name="target" size={14}/> 戰鬥防線</div>
+                                        <p className="text-slate-700 font-bold text-xs">{data.tradingPlan.stopLoss}</p>
                                     </div>
                                 </div>
                             </div>
 
+                            {/* 第三層：借券掃描 */}
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                                 <h3 className="font-bold mb-4 flex items-center gap-2 text-orange-600">
-                                    <Icon name="bar-chart-3" /> 空頭認輸掃描器
+                                    <Icon name="bar-chart-3" /> 空頭認輸掃描 (借券回補)
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="border border-slate-100 p-3 rounded-xl flex justify-between items-center hover:bg-slate-50 transition cursor-pointer">
                                         <div>
-                                            <div className="font-bold text-slate-900">2330 台積電</div>
+                                            <div className="font-bold text-slate-900 text-sm">2330 台積電</div>
                                             <div className="text-[10px] text-slate-400">借券連三減 + 守月線</div>
                                         </div>
                                         <div className="text-right">
                                             <div className="text-red-500 font-mono font-bold">-1,240 張</div>
+                                            <div className="text-[10px] bg-red-50 px-1 rounded inline-block text-red-600">回補中</div>
                                         </div>
                                     </div>
                                     <div className="border border-slate-100 p-3 rounded-xl flex justify-between items-center hover:bg-slate-50 transition cursor-pointer">
                                         <div>
-                                            <div className="font-bold text-slate-900">2454 聯發科</div>
-                                            <div className="text-[10px] text-slate-400">底部不再破底</div>
+                                            <div className="font-bold text-slate-900 text-sm">2454 聯發科</div>
+                                            <div className="text-[10px] text-slate-400">底部不再破底 (1000元)</div>
                                         </div>
                                         <div className="text-right">
                                             <div className="text-red-500 font-mono font-bold">-580 張</div>
+                                            <div className="text-[10px] bg-red-50 px-1 rounded inline-block text-red-600">止穩</div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
+                        {/* 側邊欄 */}
                         <div className="space-y-6">
                             <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-lg border-t-4 border-t-yellow-400">
-                                <h3 className="font-bold mb-4 flex items-center gap-2 text-yellow-400"><Icon name="check-circle-2" /> 06:00 核心觀點</h3>
-                                <p className="text-sm leading-relaxed text-slate-300 bg-white/5 p-3 rounded-lg border border-white/10">{data.marketNews}</p>
-                            </div>
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                                <h3 className="font-bold mb-4 flex items-center gap-2 text-blue-500"><Icon name="users" /> 隔日沖監控</h3>
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between p-2 rounded bg-red-50 text-sm font-bold"><span>凱基-台北</span><span className="text-[10px] text-red-600">警戒</span></div>
-                                    <div className="flex items-center justify-between p-2 rounded bg-purple-50 text-sm font-bold"><span>兆豐-嘉義</span><span className="text-[10px] text-purple-600">佈局</span></div>
+                                <h3 className="font-bold mb-4 flex items-center gap-2 text-yellow-400">
+                                    <Icon name="check-circle-2" /> 06:00 核心觀點
+                                </h3>
+                                <div className="space-y-4">
+                                    <p className="text-xs leading-relaxed text-slate-300 bg-white/5 p-3 rounded-lg border border-white/10">
+                                        {data.marketNews}
+                                    </p>
+                                    <div className="space-y-2">
+                                        <div className="flex gap-2 text-[11px] text-slate-300">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 mt-1 shrink-0"></div>
+                                            <span>匯率是外資的「錢袋」，升值代表銀彈充足。</span>
+                                        </div>
+                                        <div className="flex gap-2 text-[11px] text-slate-300">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 mt-1 shrink-0"></div>
+                                            <span>ADR 是開盤「溫度計」，決定了開盤氣氛。</span>
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
+
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                                <h3 className="font-bold mb-4 flex items-center gap-2 text-blue-500"><Icon name="users" /> 隔日沖分點監控</h3>
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between p-2 rounded-lg bg-red-50/50 border border-red-100">
+                                        <span className="text-sm font-bold text-slate-700">凱基-台北</span>
+                                        <span className="text-[10px] font-bold text-red-600">警戒賣壓</span>
+                                    </div>
+                                    <div className="flex items-center justify-between p-2 rounded-lg bg-purple-50/50 border border-purple-100">
+                                        <span className="text-sm font-bold text-slate-700">兆豐-嘉義</span>
+                                        <span className="text-[10px] font-bold text-purple-600">連續佈局</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl">
+                                <h4 className="font-bold text-amber-800 flex items-center gap-1 mb-2 text-sm">
+                                    <Icon name="alert-circle" size={16}/> 高手開盤守則
+                                </h4>
+                                <ul className="text-[11px] text-amber-700 space-y-2 font-medium">
+                                    <li className="flex gap-2"><span>1.</span> 08:30 前劇本寫好，「不准更改」。</li>
+                                    <li className="flex gap-2"><span>2.</span> 站不穩開盤價前，「嚴禁追高」。</li>
+                                    <li className="flex gap-2"><span>3.</span> 匯率若轉貶，「持股要縮」。</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
                     <footer className="text-center text-slate-400 text-[10px] mt-12 pt-6 border-t border-slate-200">
-                        高手戰鬥系統版本 v2.1 • © 2026 自動化盤前分析
+                        台股盤前戰鬥看板 v2.5 (即時數據版) • 數據源：Yahoo Finance 自動化腳本
                     </footer>
                 </div>
             );
