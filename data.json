@@ -1,5 +1,5 @@
 {
-    "lastUpdate": "2026/05/16 06:40:15",
+    "lastUpdate": "2026/05/17 06:31:54",
     "usMarket": {
         "tsmcAdr": -3.2,
         "sox": -4.02,
@@ -9,8 +9,8 @@
     },
     "currency": {
         "current": 31.56,
-        "prev1600": 31.559,
-        "change": 0.001
+        "prev1600": 31.564,
+        "change": -0.004
     },
     "marketNews": "自動更新：美股回檔，台幣報 31.56。",
     "tradingPlan": {
