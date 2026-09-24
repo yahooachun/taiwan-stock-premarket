@@ -1,18 +1,18 @@
 {
-    "lastUpdate": "2026/09/23 07:52:23",
+    "lastUpdate": "2026/09/24 08:00:21",
     "usMarket": {
-        "tsmcAdr": 1.54,
-        "sox": 2.06,
-        "nasdaq": 0.45,
-        "dow": -0.36,
-        "nvda": 0.66
+        "tsmcAdr": NaN,
+        "sox": 0.0,
+        "nasdaq": 0.0,
+        "dow": 0.0,
+        "nvda": NaN
     },
     "currency": {
-        "current": 31.676,
-        "prev1600": 31.738,
-        "change": -0.062
+        "current": 31.788,
+        "prev1600": 31.68,
+        "change": 0.108
     },
-    "marketNews": "自動更新：美股上漲，台幣報 31.676。",
+    "marketNews": "自動更新：美股回檔，台幣報 31.788。",
     "tradingPlan": {
         "openHigh": "ADR 表現強勁，開高不追，觀察 9:15 支撐。",
         "openLow": "觀察匯率是否貶破 32 元關卡。",
