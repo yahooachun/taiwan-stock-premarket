@@ -1,11 +1,11 @@
 {
-    "lastUpdate": "2026/10/03 08:46:00",
+    "lastUpdate": "2026/10/04 08:07:33",
     "usMarket": {
-        "tsmcAdr": NaN,
+        "tsmcAdr": 2.96,
         "sox": 2.4,
         "nasdaq": 1.19,
         "dow": 0.49,
-        "nvda": NaN
+        "nvda": 1.34
     },
     "currency": {
         "current": 31.796,
